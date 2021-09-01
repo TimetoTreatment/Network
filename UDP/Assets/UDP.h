@@ -1,9 +1,9 @@
 #pragma once
 #include <winsock2.h>
 #include <WS2tcpip.h>
-
 #include <iostream>
 
+using std::string;
 
 class UDP
 {
@@ -42,13 +42,21 @@ public:
 		}
 	}
 
-
-	bool Transmit()
+	bool Transmit(const char* message)
 	{
+		memset((char*)&clientAddress, 0, sizeof(clientAddress));
+		clientAddress.sin_family = AF_INET;
+		clientAddress.sin_port = htons(port);
 
+		inet_pton(AF_INET, "192.168.219.101", &(clientAddress.sin_addr.s_addr));
+
+		if (sendto(s, message, strlen(message), 0, (struct sockaddr*)&clientAddress, slen) == SOCKET_ERROR)
+		{
+			std::cout << "sendto() failed with error code : " << WSAGetLastError();
+			exit(EXIT_FAILURE);
+		}
 
 	}
-
 
 	bool Receive(bool debugMode = false)
 	{
@@ -72,7 +80,7 @@ public:
 		return true;
 	}
 
-	bool ReceiveNonBlock(bool block, bool debugMode = false)
+	bool ReceiveNonBlock(bool debugMode = false)
 	{
 		// clear the buffer by filling null, it might have previously received data
 		memset(buffer, '\0', bufferLength);
@@ -92,10 +100,7 @@ public:
 			char str[20];
 			std::cout << " - Received packet from " << inet_ntop(AF_INET, &clientAddress.sin_addr, str, sizeof(str)) << ':' << ntohs(clientAddress.sin_port) << '\n';
 		}
-
-		return true;
 	}
-
 
 	char* ReadFromBuffer()
 	{
@@ -110,7 +115,6 @@ public:
 
 
 private:
-
 
 	char* buffer = nullptr;
 	const int bufferLength = 1024;

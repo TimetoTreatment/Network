@@ -2,9 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="UDP.cpp" />
+    <ClCompile Include="..\Assets\UDP.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="UDP.h" />
+    <ClInclude Include="..\Assets\UDP.h" />
   </ItemGroup>
 </Project>
