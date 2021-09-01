@@ -4,12 +4,9 @@
 #include "../Assets/UDP.h"
 #include <thread>
 
-#define SERVER "192.168.219.101"
-#define BUFLEN 512
-#define PORT 9510
 
 using namespace std::chrono_literals;
-
+using std::string;
 
 char value[20];
 
@@ -27,8 +24,16 @@ void getKeyboard()
 int main(void)
 {
 	char buffer[100];
+	int port;
+	string targetAddress;
 
-	UDP* udp = new UDP(9510);
+	std::cout << "PORT : ";
+	std::cin >> port;
+
+	std::cout << "Target Address : ";
+	std::cin >> targetAddress;
+
+	UDP* udp = new UDP(port, true, targetAddress);
 
 	udp->Initialize();
 
@@ -36,8 +41,7 @@ int main(void)
 
 	for (;;)
 	{
-		std::this_thread::sleep_for(100ms);
-		std::cout << "loop\n";
+		std::this_thread::sleep_for(10ms);
 		memcpy(buffer, value, 20);
 
 		if (buffer[0] != '\0')
@@ -53,7 +57,8 @@ int main(void)
 		memset(value, '\0', 20);
 	}
 
-
+	udp->Terminate();
+	delete udp;
 
 	return 0;
 }
