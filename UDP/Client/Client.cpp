@@ -1,64 +1,72 @@
 #include <iostream>
-#include <winsock2.h>
+#include <string>
 #include <WS2tcpip.h>
-#include "../Assets/UDP.h"
-#include <thread>
+#pragma comment(lib, "ws2_32.lib")
 
+using namespace std;
 
-using namespace std::chrono_literals;
-using std::string;
-
-char value[20];
-
-
-void getKeyboard()
+int main()
 {
-	for (;;)
+	string ipAddress = "192.168.219.102";			// IP Address of the server
+	int port = 9510;						// Listening port # on the server
+
+	// Initialize WinSock
+	WSAData data;
+	WORD ver = MAKEWORD(2, 2);
+	int wsResult = WSAStartup(ver, &data);
+	if (wsResult != 0)
 	{
-		std::cin >> value;
+		cerr << "Can't start Winsock, Err #" << wsResult << endl;
+		return 1;
 	}
-}
 
-
-
-int main(void)
-{
-	char buffer[100];
-	int port;
-	string targetAddress;
-
-	std::cout << "PORT : ";
-	std::cin >> port;
-
-	std::cout << "Target Address : ";
-	std::cin >> targetAddress;
-
-	UDP* udp = new UDP(port, true, targetAddress);
-
-	udp->Initialize();
-
-	std::thread t(getKeyboard);
-
-	for (;;)
+	// Create socket
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET)
 	{
-		std::this_thread::sleep_for(10ms);
-		memcpy(buffer, value, 20);
+		cerr << "Can't create socket, Err #" << WSAGetLastError() << endl;
+		WSACleanup();
+		return 1;
+	}
 
-		if (buffer[0] != '\0')
+	// Fill in a hint structure
+	sockaddr_in hint;
+	hint.sin_family = AF_INET;
+	hint.sin_port = htons(port);
+	inet_pton(AF_INET, ipAddress.c_str(), &hint.sin_addr);
+
+	// Connect to server
+	int connResult = connect(sock, (sockaddr*)&hint, sizeof(hint));
+	if (connResult == SOCKET_ERROR)
+	{
+		cerr << "Can't connect to server, Err #" << WSAGetLastError() << endl;
+		closesocket(sock);
+		WSACleanup();
+		return 1;
+	}
+
+	// Do-while loop to send and receive data
+	char buf[4096];
+	string userInput;
+
+	do
+	{
+		// Prompt the user for some text
+		cout << "> ";
+		getline(cin, userInput);
+
+		if (userInput.size() > 0)		// Make sure the user has typed in something
 		{
-			std::cout << "Transmit : " << buffer << std::endl;
-			udp->Transmit(value);
+			// Send the text
+			int sendResult = send(sock, userInput.c_str(), userInput.size() + 1, 0);
+
 		}
 
-		if (udp->ReceiveNonBlock())
-			std::cout << "Receive : " << udp->ReadFromBuffer() << std::endl;
+	} while (userInput.size() > 0);
 
-		memset(buffer, '\0', 100);
-		memset(value, '\0', 20);
-	}
-
-	udp->Terminate();
-	delete udp;
+	// Gracefully close down everything
+	closesocket(sock);
+	WSACleanup();
 
 	return 0;
 }
