@@ -139,13 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Assets\TCP.cpp" />
-    <ClCompile Include="..\Assets\UDP.cpp" />
+    <ClCompile Include="..\..\Utility\TCP.cpp" />
+    <ClCompile Include="..\..\Utility\UDP.cpp" />
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Assets\TCP.h" />
-    <ClInclude Include="..\Assets\UDP.h" />
+    <ClInclude Include="..\..\Utility\TCP.h" />
+    <ClInclude Include="..\..\Utility\UDP.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
