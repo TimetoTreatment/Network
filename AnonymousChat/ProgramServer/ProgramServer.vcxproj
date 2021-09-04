@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ce7db3f4-2725-40a5-b36d-be07f786f7b5}</ProjectGuid>
-    <RootNamespace>TestServer</RootNamespace>
+    <ProjectGuid>{e32b0b48-6f4a-4f0e-b161-ee962fe653dd}</ProjectGuid>
+    <RootNamespace>ProgramServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -139,11 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Utility\UDP.cpp" />
-    <ClCompile Include="TestServer.cpp" />
+    <ClCompile Include="..\..\Utility\Random.cpp" />
+    <ClCompile Include="..\..\Utility\TCP.cpp" />
+    <ClCompile Include="ProgramServer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Utility\UDP.h" />
+    <ClInclude Include="..\..\Utility\Random.h" />
+    <ClInclude Include="..\..\Utility\TCP.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

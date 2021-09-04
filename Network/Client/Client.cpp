@@ -7,14 +7,9 @@ using namespace std;
 using namespace chrono_literals;
 
 
-
-
-
 int main()
 {
 	string input;
-
-
 	thread t([&input]() {for (;;) cin >> input; });
 
 
@@ -42,7 +37,6 @@ int main()
 
 	delete tcp;
 	t.detach();
-
 
 	return 0;
 }
