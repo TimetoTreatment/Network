@@ -139,10 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Utility\TCP.cpp" />
     <ClCompile Include="..\..\Utility\UDP.cpp" />
     <ClCompile Include="TestClient.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Utility\TCP.h" />
     <ClInclude Include="..\..\Utility\UDP.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

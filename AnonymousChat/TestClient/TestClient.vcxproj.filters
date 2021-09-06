@@ -3,8 +3,10 @@
   <ItemGroup>
     <ClCompile Include="TestClient.cpp" />
     <ClCompile Include="..\..\Utility\UDP.cpp" />
+    <ClCompile Include="..\..\Utility\TCP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Utility\UDP.h" />
+    <ClInclude Include="..\..\Utility\TCP.h" />
   </ItemGroup>
 </Project>

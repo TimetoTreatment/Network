@@ -9,7 +9,7 @@ using namespace chrono_literals;
 
 int main()
 {
-	TCP* tcp = new TCP(9510, "127.0.0.1");
+	TCP* tcp = new TCP("9510", "127.0.0.1");
 	string cinBuffer;
 	string message;
 	string userName;
@@ -29,7 +29,8 @@ int main()
 			string line;
 			getline(cin, line);
 			cinBuffer = line;
-		}});
+		}}
+	);
 
 	for (bool exit = false; !exit;)
 	{

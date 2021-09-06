@@ -22,18 +22,20 @@ public:
 
 	enum class SendRange
 	{
-		EVENT_SENDER,
+		EVENT_SOURCE,
 		ALL,
 		OTHERS,
 	};
 
-	TCP(int port, std::string targetIP = "0.0.0.0");
+	TCP(std::string port, std::string targetIP = "0.0.0.0");
 	~TCP();
 
 	WaitEventType WaitEvent(int timeoutMicroSecond = -1);
-	void Send(std::string message, SendRange sendRange = SendRange::EVENT_SENDER);
+
+	void Send(std::string message, SendRange sendRange = SendRange::EVENT_SOURCE);
+
 	std::string ReadMessage();
-	std::string CurrentSocketID();
+	std::string ReadSenderID();
 
 	void AddClient();
 	void CloseClient();
@@ -41,22 +43,17 @@ public:
 
 private:
 
-	void ClearBuffer();
-
-	int port;
-	std::string targetIP;
-
 	bool isServer;
 
 	SOCKET mySocket;
 	addrinfo mySocketHint;
-	SOCKET currentClient = INVALID_SOCKET;
+	SOCKET sender = INVALID_SOCKET;
 
-	size_t fdArrayCurrentIndex = 0;
 	std::vector<WSAPOLLFD> fdArray;
+	size_t fdArrayCurrentIndex = 0;
 
-	char* buffer;
-	int bufferSize;
+	char* buffer = nullptr;
+	int bufferSize = 1024;
 	WSADATA wsaData;
 };
 

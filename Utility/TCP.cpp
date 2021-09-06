@@ -1,16 +1,12 @@
 #include "TCP.h"
 
-TCP::TCP(int port, std::string targetIP)
+
+TCP::TCP(std::string port, std::string targetAddress)
 {
-	this->port = port;
-	this->targetIP = targetIP;
+	isServer = (targetAddress == "0.0.0.0");
 
-	isServer = (targetIP == "0.0.0.0");
-
-	bufferSize = 1024;
 	buffer = new char[bufferSize];
-
-	ClearBuffer();
+	memset(buffer, 0, sizeof(mySocketHint));
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
@@ -18,25 +14,26 @@ TCP::TCP(int port, std::string targetIP)
 		abort();
 	}
 
-	addrinfo* result = nullptr;
-
 	memset(&mySocketHint, 0, sizeof(mySocketHint));
 	mySocketHint.ai_family = AF_INET;
 	mySocketHint.ai_socktype = SOCK_STREAM;
 	mySocketHint.ai_protocol = IPPROTO_TCP;
-	mySocketHint.ai_flags = AI_PASSIVE;
+
+	addrinfo* addrinfoResult = nullptr;
 
 	if (isServer)
 	{
-		getaddrinfo(nullptr, std::to_string(port).c_str(), &mySocketHint, &result);
+		mySocketHint.ai_flags = AI_PASSIVE;
 
-		if ((mySocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) == INVALID_SOCKET)
+		getaddrinfo(nullptr, port.c_str(), &mySocketHint, &addrinfoResult);
+
+		if ((mySocket = socket(addrinfoResult->ai_family, addrinfoResult->ai_socktype, addrinfoResult->ai_protocol)) == INVALID_SOCKET)
 		{
 			std::cerr << "TCP::Socket() : " << WSAGetLastError();
 			abort();
 		}
 
-		if (bind(mySocket, result->ai_addr, result->ai_addrlen) == SOCKET_ERROR)
+		if (bind(mySocket, addrinfoResult->ai_addr, (int)addrinfoResult->ai_addrlen) == SOCKET_ERROR)
 		{
 			std::cerr << "TCP::bind() : " << WSAGetLastError();
 			abort();
@@ -48,29 +45,25 @@ TCP::TCP(int port, std::string targetIP)
 			abort();
 		}
 	}
-	else
+	else // (isClient)
 	{
-		getaddrinfo(targetIP.c_str(), std::to_string(port).c_str(), &mySocketHint, &result);
+		getaddrinfo(targetAddress.c_str(), port.c_str(), &mySocketHint, &addrinfoResult);
 
-		for (addrinfo* iter = result; iter != NULL; iter = iter->ai_next) {
-
-			// Create a SOCKET for connecting to server
+		for (addrinfo* iter = addrinfoResult; iter != NULL; iter = iter->ai_next) 
+		{
 			mySocket = socket(iter->ai_family, iter->ai_socktype, iter->ai_protocol);
 
 			if (mySocket == INVALID_SOCKET) {
-				printf("socket failed with error: %ld\n", WSAGetLastError());
+				std::cerr << "TCP::socket() : " << WSAGetLastError();
 				WSACleanup();
 				abort();
 			}
 
-			// Connect to server.
-
 			if (connect(mySocket, iter->ai_addr, (int)iter->ai_addrlen) == SOCKET_ERROR) {
 				closesocket(mySocket);
 				mySocket = INVALID_SOCKET;
-				continue;
 			}
-			break;
+			else break;
 		}
 
 		if (mySocket == INVALID_SOCKET)
@@ -79,10 +72,10 @@ TCP::TCP(int port, std::string targetIP)
 			abort();
 		}
 
-		currentClient = mySocket;
+		sender = mySocket;
 	}
 
-	freeaddrinfo(result);
+	freeaddrinfo(addrinfoResult);
 
 	fdArray.emplace_back(WSAPOLLFD{ mySocket, POLLRDNORM, 0 });
 }
@@ -104,7 +97,7 @@ TCP::~TCP()
 
 TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 {
-	if (WSAPoll(fdArray.data(), fdArray.size(), timeoutMicroSecond) == 0)
+	if (WSAPoll(fdArray.data(), (ULONG)fdArray.size(), timeoutMicroSecond) == 0)
 		return WaitEventType::NONE;
 
 	size_t prevPos = fdArrayCurrentIndex;
@@ -115,13 +108,13 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 
 		if (pollfd.revents & POLLIN)
 		{
-			currentClient = pollfd.fd;
+			sender = pollfd.fd;
 
 			if (isServer && pollfd.fd == mySocket)
 				return WaitEventType::NEWCLIENT;
 			else
 			{
-				ClearBuffer();
+				memset(buffer, 0, sizeof(mySocketHint));
 				recv(pollfd.fd, buffer, bufferSize, 0);
 
 				if (buffer[0] == '\\')
@@ -132,7 +125,7 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 		}
 		else if (pollfd.revents & POLLHUP)
 		{
-			currentClient = pollfd.fd;
+			sender = pollfd.fd;
 
 			return WaitEventType::DISCONNECT;
 		}
@@ -149,8 +142,8 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 
 void TCP::AddClient()
 {
-	currentClient = accept(mySocket, (sockaddr*)&currentClient, nullptr);
-	fdArray.emplace_back(WSAPOLLFD{ currentClient, POLLRDNORM , 0 });
+	sender = accept(mySocket, (sockaddr*)&sender, nullptr);
+	fdArray.emplace_back(WSAPOLLFD{ sender, POLLRDNORM , 0 });
 }
 
 void TCP::CloseClient()
@@ -170,23 +163,23 @@ void TCP::Send(std::string message, SendRange sendRange)
 {
 	switch (sendRange)
 	{
-	case SendRange::EVENT_SENDER:
+	case SendRange::EVENT_SOURCE:
 
-		send(currentClient, message.data(), message.size() + 1, 0);
+		send(sender, message.data(), (int)message.size() + 1, 0);
 		break;
 
 	case SendRange::ALL:
 
 		for (size_t i = 0; i < fdArray.size(); i++)
-			send(fdArray[i].fd, message.data(), message.size() + 1, 0);
+			send(fdArray[i].fd, message.data(), (int)message.size() + 1, 0);
 		break;
 
 	case SendRange::OTHERS:
 
 		for (size_t i = 0; i < fdArray.size(); i++)
 		{
-			if (fdArray[i].fd != currentClient)
-				send(fdArray[i].fd, message.data(), message.size() + 1, 0);
+			if (fdArray[i].fd != sender)
+				send(fdArray[i].fd, message.data(), (int)message.size() + 1, 0);
 		}
 		break;
 	}
@@ -197,12 +190,7 @@ std::string TCP::ReadMessage()
 	return buffer;
 }
 
-std::string TCP::CurrentSocketID()
+std::string TCP::ReadSenderID()
 {
-	return std::to_string(currentClient);
-}
-
-void TCP::ClearBuffer()
-{
-	memset(buffer, 0, bufferSize);
+	return std::to_string(sender);
 }

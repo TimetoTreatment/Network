@@ -9,7 +9,7 @@ using namespace std;
 using namespace chrono_literals;
 
 
-class Operation
+struct Operation
 {
 public:
 
@@ -18,7 +18,9 @@ public:
 		size_t whiteSpace = line.find(' ');
 
 		command = line.substr(0, whiteSpace);
-		argument = line.substr(whiteSpace + 1);
+
+		if (whiteSpace != string::npos)
+			argument = line.substr(whiteSpace + 1);
 	}
 
 	string command;
@@ -28,66 +30,68 @@ public:
 
 int main()
 {
-	TCP* tcp = new TCP(9510);
+	TCP* tcp = new TCP("9510");
 
 	cout << "****************" << endl;
 	cout << "* Server Start *" << endl;
 	cout << "****************" << endl;
 
 	map<string, string> users;
+	int anonymCount = 0;
 
 	for (bool exit = false; !exit;)
 	{
-		switch (tcp->WaitEvent(false))
+		switch (tcp->WaitEvent())
 		{
 		case TCP::WaitEventType::NEWCLIENT:
+
 			tcp->AddClient();
-			tcp->Send("[SERVER] Your SocketID is #" + tcp->CurrentSocketID());
-			tcp->Send("[SERVER] #" + tcp->CurrentSocketID() + " is connected", TCP::SendRange::OTHERS);
-			cout << "[SERVER] #" + tcp->CurrentSocketID() + " is connected." << endl;
+			tcp->Send("[SERVER] Your SocketID is #" + tcp->ReadSenderID());
+			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is connected", TCP::SendRange::OTHERS);
+			cout << "[SERVER] #" + tcp->ReadSenderID() + " is connected." << endl;
 			break;
 
 		case TCP::WaitEventType::DISCONNECT:
+
 			tcp->CloseClient();
-			tcp->Send("[SERVER] #" + tcp->CurrentSocketID() + " is disconnected", TCP::SendRange::OTHERS);
-			users.erase(tcp->CurrentSocketID());
-			cout << "[SERVER] #" + tcp->CurrentSocketID() + " is disconnected." << endl;
+			tcp->Send("[SERVER] " + users[tcp->ReadSenderID()] + "님이 방을 나가셨습니다.", TCP::SendRange::OTHERS);
+			users.erase(tcp->ReadSenderID());
+			cout << "[SERVER] #" + tcp->ReadSenderID() + " is disconnected." << endl;
 			break;
 
 		case TCP::WaitEventType::MESSAGE:
 
-			string messageIn = tcp->ReadMessage();
-
-			if (messageIn.substr(0, 2) == "--")
+			if (tcp->ReadMessage().substr(0, 2) == "--")
 			{
-				Operation operation(messageIn);
+				Operation operation(tcp->ReadMessage());
 
 				if (operation.command == "--shutdown")
 					exit = true;
-
 				else if (operation.command == "--username")
 				{
 					string userName = operation.argument;
 
-					if (userName.empty())
-						userName = "익명" + to_string(5);
+					if (userName.empty() || userName.find("SERVER") != string::npos)
+					{
+						anonymCount++;
+						userName = "익명" + to_string(anonymCount);
+					}
 
-					if (users.find(tcp->CurrentSocketID()) == users.end())
-						users.emplace(tcp->CurrentSocketID(), userName);
+					if (users.find(tcp->ReadSenderID()) == users.end())
+						users.emplace(tcp->ReadSenderID(), userName);
 					else
-						users[tcp->CurrentSocketID()] = userName;
+						users[tcp->ReadSenderID()] = userName;
 				}
-
 				else if (operation.command == "--dice")
 				{
-					string messageOut = "[SERVER] " + users[tcp->CurrentSocketID()] + "님이 주사위를 굴려 " + std::to_string(Random::Integer(0, 100)) + "이 나왔습니다!";
+					string messageOut = "[SERVER] " + users[tcp->ReadSenderID()] + "님이 주사위를 굴려 " + std::to_string(Random::Integer(0, 100)) + "이(가) 나왔습니다!";
 					tcp->Send(messageOut, TCP::SendRange::ALL);
 				}
 			}
 			else
 			{
-				tcp->Send("[" + users[tcp->CurrentSocketID()] + "] : " + tcp->ReadMessage(), TCP::SendRange::ALL);
-				cout << "[CLIENT] #" + tcp->CurrentSocketID() + " send a message" << endl;
+				tcp->Send("[" + users[tcp->ReadSenderID()] + "] : " + tcp->ReadMessage(), TCP::SendRange::ALL);
+				cout << "[CLIENT] #" + tcp->ReadSenderID() + " send a message" << endl;
 			}
 
 			break;
@@ -96,7 +100,7 @@ int main()
 		this_thread::sleep_for(100us);
 	}
 
-	tcp->Send("[SERVER] Server is closed\r\n", TCP::SendRange::ALL);
+	tcp->Send("[SERVER] Server is closed", TCP::SendRange::ALL);
 	delete tcp;
 
 	return 0;

@@ -7,9 +7,6 @@ ProgramClient::ProgramClient(QWidget* parent)
 
 	NewConnection();
 
-
-
-
 	QTimer* timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, &ProgramClient::ReceiveMsg);
 	timer->start(100);
@@ -32,7 +29,7 @@ void ProgramClient::NewConnection()
 	if (serverPort.empty())
 		serverPort = "9510";
 
-	tcp = new TCP(std::stoi(serverPort), serverAddress);
+	tcp = new TCP(serverPort, serverAddress);
 
 	tcp->Send("--username " + userName);
 	tcp->WaitEvent();
