@@ -47,14 +47,14 @@ int main()
 
 			tcp->AddClient();
 			tcp->Send("[SERVER] Your SocketID is #" + tcp->ReadSenderID());
-			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is connected", TCP::SendRange::OTHERS);
+			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is connected", TCP::SendTo::OTHERS);
 			cout << "[SERVER] #" + tcp->ReadSenderID() + " is connected." << endl;
 			break;
 
 		case TCP::WaitEventType::DISCONNECT:
 
 			tcp->CloseClient();
-			tcp->Send("[SERVER] " + users[tcp->ReadSenderID()] + "님이 방을 나가셨습니다.", TCP::SendRange::OTHERS);
+			tcp->Send("[SERVER] " + users[tcp->ReadSenderID()] + "님이 방을 나가셨습니다.", TCP::SendTo::OTHERS);
 			users.erase(tcp->ReadSenderID());
 			cout << "[SERVER] #" + tcp->ReadSenderID() + " is disconnected." << endl;
 			break;
@@ -85,12 +85,12 @@ int main()
 				else if (operation.command == "--dice")
 				{
 					string messageOut = "[SERVER] " + users[tcp->ReadSenderID()] + "님이 주사위를 굴려 " + std::to_string(Random::Integer(0, 100)) + "이(가) 나왔습니다!";
-					tcp->Send(messageOut, TCP::SendRange::ALL);
+					tcp->Send(messageOut, TCP::SendTo::ALL);
 				}
 			}
 			else
 			{
-				tcp->Send("[" + users[tcp->ReadSenderID()] + "] : " + tcp->ReadMessage(), TCP::SendRange::ALL);
+				tcp->Send("[" + users[tcp->ReadSenderID()] + "] : " + tcp->ReadMessage(), TCP::SendTo::ALL);
 				cout << "[CLIENT] #" + tcp->ReadSenderID() + " send a message" << endl;
 			}
 
@@ -100,7 +100,7 @@ int main()
 		this_thread::sleep_for(100us);
 	}
 
-	tcp->Send("[SERVER] Server is closed", TCP::SendRange::ALL);
+	tcp->Send("[SERVER] Server is closed", TCP::SendTo::ALL);
 	delete tcp;
 
 	return 0;

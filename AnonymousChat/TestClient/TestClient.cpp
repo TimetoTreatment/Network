@@ -44,6 +44,11 @@ int main()
 			message.clear();
 			cinBuffer.clear();
 		}
+		else if (message == "EXIT")
+		{
+			exit = true;
+			break;
+		}
 
 		// Receive
 		switch (tcp->WaitEvent(100))

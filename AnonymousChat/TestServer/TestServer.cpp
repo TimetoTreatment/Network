@@ -25,13 +25,13 @@ int main()
 		case TCP::WaitEventType::NEWCLIENT:
 			tcp->AddClient();
 			tcp->Send("[SERVER] Your SocketID is #" + tcp->ReadSenderID() + "\r\n");
-			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is connected" + "\r\n", TCP::SendRange::OTHERS);
+			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is connected" + "\r\n", TCP::SendTo::OTHERS);
 			cout << "[SERVER] #" + tcp->ReadSenderID() + " is connected." << endl;
 			break;
 
 		case TCP::WaitEventType::DISCONNECT:
 			tcp->CloseClient();
-			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is disconnected" + "\r\n", TCP::SendRange::OTHERS);
+			tcp->Send("[SERVER] #" + tcp->ReadSenderID() + " is disconnected" + "\r\n", TCP::SendTo::OTHERS);
 			cout << "[SERVER] #" + tcp->ReadSenderID() + " is disconnected." << endl;
 			break;
 
@@ -45,7 +45,7 @@ int main()
 				users.emplace(tcp->ReadSenderID(), message.substr(10));
 			else
 			{
-				tcp->Send("[" + users[tcp->ReadSenderID()] + "] : " + tcp->ReadMessage() + "\r\n", TCP::SendRange::OTHERS);
+				tcp->Send("[" + users[tcp->ReadSenderID()] + "] : " + tcp->ReadMessage() + "\r\n", TCP::SendTo::OTHERS);
 				cout << "[CLIENT] #" + tcp->ReadSenderID() + " send a message" << endl;
 			}
 
@@ -55,7 +55,7 @@ int main()
 		this_thread::sleep_for(100us);
 	}
 
-	tcp->Send("[SERVER] Server is closed\r\n", TCP::SendRange::ALL);
+	tcp->Send("[SERVER] Server is closed\r\n", TCP::SendTo::ALL);
 	delete tcp;
 
 	return 0;

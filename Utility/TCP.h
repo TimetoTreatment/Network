@@ -20,7 +20,7 @@ public:
 		MESSAGE,
 	};
 
-	enum class SendRange
+	enum class SendTo
 	{
 		EVENT_SOURCE,
 		ALL,
@@ -32,7 +32,7 @@ public:
 
 	WaitEventType WaitEvent(int timeoutMicroSecond = -1);
 
-	void Send(std::string message, SendRange sendRange = SendRange::EVENT_SOURCE);
+	void Send(std::string message, SendTo sendTo = SendTo::EVENT_SOURCE);
 
 	std::string ReadMessage();
 	std::string ReadSenderID();

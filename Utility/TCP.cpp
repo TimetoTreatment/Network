@@ -32,7 +32,7 @@ TCP::TCP(std::string port, std::string targetAddress)
 			std::cerr << "TCP::Socket() : " << WSAGetLastError();
 			abort();
 		}
-
+		
 		if (bind(mySocket, addrinfoResult->ai_addr, (int)addrinfoResult->ai_addrlen) == SOCKET_ERROR)
 		{
 			std::cerr << "TCP::bind() : " << WSAGetLastError();
@@ -82,6 +82,7 @@ TCP::TCP(std::string port, std::string targetAddress)
 
 TCP::~TCP()
 {
+	shutdown(mySocket, SD_BOTH);
 	closesocket(mySocket);
 
 	for (size_t i = 0; i < fdArray.size(); i++)
@@ -142,7 +143,7 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 
 void TCP::AddClient()
 {
-	sender = accept(mySocket, (sockaddr*)&sender, nullptr);
+	sender = accept(mySocket, nullptr, nullptr);
 	fdArray.emplace_back(WSAPOLLFD{ sender, POLLRDNORM , 0 });
 }
 
@@ -159,22 +160,22 @@ void TCP::CloseClient()
 		fdArrayCurrentIndex = 0;
 }
 
-void TCP::Send(std::string message, SendRange sendRange)
+void TCP::Send(std::string message, SendTo sendTo)
 {
-	switch (sendRange)
+	switch (sendTo)
 	{
-	case SendRange::EVENT_SOURCE:
+	case SendTo::EVENT_SOURCE:
 
 		send(sender, message.data(), (int)message.size() + 1, 0);
 		break;
 
-	case SendRange::ALL:
+	case SendTo::ALL:
 
 		for (size_t i = 0; i < fdArray.size(); i++)
 			send(fdArray[i].fd, message.data(), (int)message.size() + 1, 0);
 		break;
 
-	case SendRange::OTHERS:
+	case SendTo::OTHERS:
 
 		for (size_t i = 0; i < fdArray.size(); i++)
 		{

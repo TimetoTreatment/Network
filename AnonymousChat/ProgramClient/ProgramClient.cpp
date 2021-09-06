@@ -55,7 +55,7 @@ void ProgramClient::ReceiveMsg()
 
 void ProgramClient::SendMsg()
 {
-	tcp->Send(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendRange::ALL);
+	tcp->Send(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendTo::ALL);
 
 	ui.lineEditMessage->clear();
 }
