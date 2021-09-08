@@ -5,8 +5,10 @@ TCP::TCP(std::string port, std::string targetAddress)
 {
 	isServer = (targetAddress == "0.0.0.0");
 
+	cache = new char[cacheSize];
+	memset(cache, 0, cacheSize);
 	buffer = new char[bufferSize];
-	memset(buffer, 0, sizeof(mySocketHint));
+	memset(buffer, 0, bufferSize);
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
@@ -32,7 +34,7 @@ TCP::TCP(std::string port, std::string targetAddress)
 			std::cerr << "TCP::Socket() : " << WSAGetLastError();
 			abort();
 		}
-		
+
 		if (bind(mySocket, addrinfoResult->ai_addr, (int)addrinfoResult->ai_addrlen) == SOCKET_ERROR)
 		{
 			std::cerr << "TCP::bind() : " << WSAGetLastError();
@@ -49,7 +51,7 @@ TCP::TCP(std::string port, std::string targetAddress)
 	{
 		getaddrinfo(targetAddress.c_str(), port.c_str(), &mySocketHint, &addrinfoResult);
 
-		for (addrinfo* iter = addrinfoResult; iter != NULL; iter = iter->ai_next) 
+		for (addrinfo* iter = addrinfoResult; iter != NULL; iter = iter->ai_next)
 		{
 			mySocket = socket(iter->ai_family, iter->ai_socktype, iter->ai_protocol);
 
@@ -93,7 +95,7 @@ TCP::~TCP()
 
 	WSACleanup();
 
-	delete buffer;
+	delete cache;
 }
 
 TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
@@ -115,10 +117,10 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMicroSecond)
 				return WaitEventType::NEWCLIENT;
 			else
 			{
-				memset(buffer, 0, sizeof(mySocketHint));
-				recv(pollfd.fd, buffer, bufferSize, 0);
+				memset(cache, 0, cacheSize);
+				recv(pollfd.fd, cache, cacheSize, 0);
 
-				if (buffer[0] == '\\')
+				if (cache[0] == '\\')
 					return WaitEventType::NONE;
 
 				return WaitEventType::MESSAGE;
@@ -160,19 +162,68 @@ void TCP::CloseClient()
 		fdArrayCurrentIndex = 0;
 }
 
-void TCP::Send(std::string message, SendTo sendTo)
+
+void TCP::Send(const char* message, int size, SendTo sendTo)
 {
+	if (size < cacheSize)
+	{
+		switch (sendTo)
+		{
+		case SendTo::EVENT_SOURCE:
+
+			send(sender, message, cacheSize, 0);
+			break;
+
+		case SendTo::ALL:
+
+			for (size_t i = 0; i < fdArray.size(); i++)
+				send(fdArray[i].fd, message, cacheSize, 0);
+			break;
+
+		case SendTo::OTHERS:
+
+			for (size_t i = 0; i < fdArray.size(); i++)
+			{
+				if (fdArray[i].fd != sender)
+					send(fdArray[i].fd, message, cacheSize, 0);
+			}
+			break;
+		}
+
+		return;
+	}
+
+	auto RecvAll = [&]()
+	{
+		int iterCount = size / cacheSize;
+		int remainder = size % cacheSize;
+		int pos = 0;
+
+		for (int count = 0; count < iterCount; count++)
+		{
+			pos = count * cacheSize;
+			memcpy(cache, message + pos, cacheSize);
+			send(sender, cache, cacheSize, 0);
+		}
+
+		if (remainder != 0)
+		{
+			pos = iterCount * cacheSize;
+			memcpy(cache, message + pos, remainder);
+			send(sender, cache, remainder, 0);
+		}
+	};
+
 	switch (sendTo)
 	{
 	case SendTo::EVENT_SOURCE:
-
-		send(sender, message.data(), (int)message.size() + 1, 0);
+		RecvAll();
 		break;
 
 	case SendTo::ALL:
 
 		for (size_t i = 0; i < fdArray.size(); i++)
-			send(fdArray[i].fd, message.data(), (int)message.size() + 1, 0);
+			RecvAll();
 		break;
 
 	case SendTo::OTHERS:
@@ -180,16 +231,45 @@ void TCP::Send(std::string message, SendTo sendTo)
 		for (size_t i = 0; i < fdArray.size(); i++)
 		{
 			if (fdArray[i].fd != sender)
-				send(fdArray[i].fd, message.data(), (int)message.size() + 1, 0);
+				RecvAll();
 		}
 		break;
 	}
 }
 
-std::string TCP::ReadMessage()
+const char* TCP::ReadMessage()
 {
+	return cache;
+}
+
+const char* TCP::ReadBuffer(int size)
+{
+	if (size <= cacheSize)
+		return cache;
+
+	int iterCount = size / cacheSize;
+	int remainder = size % cacheSize;
+	int pos = 0;
+
+	memcpy(buffer, cache, cacheSize);
+
+	for (int count = 1; count < iterCount; count++)
+	{
+		pos = count * cacheSize;
+		recv(fdArray[fdArrayCurrentIndex].fd, cache, cacheSize, 0);
+		memcpy(buffer + pos, cache, cacheSize);
+	}
+
+	if (remainder != 0)
+	{
+		pos = iterCount * cacheSize;
+		recv(fdArray[fdArrayCurrentIndex].fd, cache, remainder, 0);
+		memcpy(buffer + pos, cache, cacheSize);
+	}
+
 	return buffer;
 }
+
 
 std::string TCP::ReadSenderID()
 {

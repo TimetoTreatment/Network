@@ -1,42 +1,38 @@
 #include <iostream>
+#include <vector>
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
 #include "../../Utility/TCP.h"
 
 using namespace std;
-using namespace chrono_literals;
+using namespace cv;
 
 
 int main()
 {
-	string input;
-	thread t([&input]() {for (;;) cin >> input; });
+	TCP* tcp = new TCP("9510", "127.0.0.1");
 
+	tcp->WaitEvent(); // ACCEPT
 
-	TCP* tcp = new TCP(9510, "127.0.0.1");
-
-	for (bool exit = false; !exit;)
+	for (;;)
 	{
-		switch (tcp->WaitEvent(100))
-		{
-		case TCP::WaitEventType::MESSAGE:
-			cout << tcp->ReadMessage();
-			break;
+		string filename;
+		cin >> filename;
 
-		case TCP::WaitEventType::DISCONNECT:
-			exit = true;
-			break;
+		Mat img = imread(filename + ".png");
+		if (img.empty())
+		{
+			cout << "img.empty()" << endl;
+			abort();
 		}
 
-		if (!input.empty())
-		{
-			tcp->Send(input);
-			input.clear();
-		}
+		int size = img.total() * img.channels();
+
+		tcp->Send("START", 6);
+		tcp->Send("6220800", 8);
+		tcp->Send((const char*)img.data, size);
 	}
-
-	delete tcp;
-	t.detach();
 
 	return 0;
 }
