@@ -21,7 +21,7 @@ int main()
 	cout << "[SERVER] Enter your nickname : ";
 	cin >> userName;
 
-	tcp->Send("[USERNAME]" + userName);
+	tcp->SendMsg("[USERNAME]" + userName);
 
 	thread cinNonBlockThread([&cinBuffer]() {
 		for (;;)
@@ -34,12 +34,12 @@ int main()
 
 	for (bool exit = false; !exit;)
 	{
-		// Send
+		// SendMsg
 		message = cinBuffer;
 
 		if (!message.empty())
 		{
-			tcp->Send(message);
+			tcp->SendMsg(message);
 
 			message.clear();
 			cinBuffer.clear();

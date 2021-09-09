@@ -27,7 +27,7 @@ int main()
 
 		case TCP::WaitEventType::MESSAGE:
 
-			if (tcp->ReadMessage() == "START")
+			if (((string)tcp->ReadMessage()) == "START")
 			{
 				tcp->WaitEvent();
 

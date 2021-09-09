@@ -1,9 +1,9 @@
 #pragma once
-#include <winsock2.h>
-#include <WS2tcpip.h>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <winsock2.h>
+#include <WS2tcpip.h>
 
 #pragma comment (lib, "ws2_32.lib")
 
@@ -30,12 +30,13 @@ public:
 	TCP(std::string port, std::string targetIP = "0.0.0.0");
 	~TCP();
 
-	WaitEventType WaitEvent(int timeoutMicroSecond = -1);
+	WaitEventType WaitEvent(int timeoutMilliseconds = -1);
 
 	void Send(const char* message, int size, SendTo sendTo = SendTo::EVENT_SOURCE);
+	void SendMsg(std::string message, SendTo sendTo = SendTo::EVENT_SOURCE);
 
-	const char* ReadMessage();
-	const char* ReadBuffer(int size);
+	const char* ReadData(int size);
+	std::string ReadMessage();
 	std::string ReadSenderID();
 
 	void AddClient();
@@ -46,7 +47,7 @@ private:
 
 	bool isServer;
 
-	SOCKET mySocket;
+	SOCKET mySocket = INVALID_SOCKET;
 	addrinfo mySocketHint;
 	SOCKET sender = INVALID_SOCKET;
 
@@ -57,6 +58,7 @@ private:
 	char* buffer = nullptr;
 	int cacheSize = 8192;
 	int bufferSize = 8388608;
+	int bufferValidDataSize = 0;
 
 	WSADATA wsaData;
 };
