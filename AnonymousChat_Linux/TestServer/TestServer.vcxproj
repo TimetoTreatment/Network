@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{b316bd94-2117-41a5-a5da-985927f398c6}</ProjectGuid>
+    <ProjectGuid>{b74d1185-60ab-4d67-a018-830402ce57f3}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>Linux_TestClient</RootNamespace>
+    <RootNamespace>TestServer</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
@@ -75,11 +75,6 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <ClCompile Include="..\..\Utility\TCPLinux.cpp" />
-    <ClCompile Include="LinuxTestClient.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\Utility\TCPLinux.h" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
