@@ -1,10 +1,7 @@
 #pragma once
-
 #include <iostream>
 #include <vector>
 #include <string>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h> 
 #include <poll.h>
@@ -36,29 +33,33 @@ public:
 	TCP(std::string port, std::string targetIP = "0.0.0.0");
 	~TCP();
 
-	WaitEventType WaitEvent(int timeoutMicroSecond = -1);
-
-	void Send(std::string message, SendTo sendTo = SendTo::EVENT_SOURCE);
-
-	std::string ReadMessage();
-	std::string ReadSenderID();
-
 	void AddClient();
 	void CloseClient();
+
+	WaitEventType WaitEvent(int timeoutMilliseconds = -1);
+
+	void Send(const char* message, int size, SendTo sendTo = SendTo::EVENT_SOURCE);
+	void SendMsg(std::string message, SendTo sendTo = SendTo::EVENT_SOURCE);
+
+	const char* ReadData(int size);
+	std::string ReadMsg();
+	std::string ReadSenderID();
 
 
 private:
 
 	bool isServer;
 
-	int mySocket;
+	int mySocket = -1;
 	addrinfo mySocketHint;
 	int sender = -1;
 
 	std::vector<pollfd> fdArray;
 	size_t fdArrayCurrentIndex = 0;
 
+	char* cache = nullptr;
 	char* buffer = nullptr;
-	int bufferSize = 1024;
+	int cacheSize = 8192;
+	int bufferSize = 8388608;
+	int bufferValidDataSize = 0;
 };
-

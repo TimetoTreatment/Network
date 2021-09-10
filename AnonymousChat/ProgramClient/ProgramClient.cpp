@@ -31,10 +31,10 @@ void ProgramClient::NewConnection()
 
 	tcp = new TCP(serverPort, serverAddress);
 
-	tcp->Send("--username " + userName);
+	tcp->SendMsg("--username " + userName);
 	tcp->WaitEvent();
 
-	ui.statusBar->setText(QString::fromStdString(tcp->ReadMessage()));
+	ui.statusBar->setText(QString::fromStdString(tcp->ReadMsg()));
 }
 
 void ProgramClient::ReceiveMsg()
@@ -42,7 +42,7 @@ void ProgramClient::ReceiveMsg()
 	switch (tcp->WaitEvent(0))
 	{
 	case TCP::WaitEventType::MESSAGE:
-		ui.textEditChat->setText(ui.textEditChat->toPlainText() + QString::fromLocal8Bit(tcp->ReadMessage().c_str()) + "\n");
+		ui.textEditChat->setText(ui.textEditChat->toPlainText() + QString::fromLocal8Bit(tcp->ReadMsg().c_str()) + "\n");
 		ui.textEditChat->verticalScrollBar()->setValue(ui.textEditChat->verticalScrollBar()->maximum());
 
 		break;
@@ -55,7 +55,7 @@ void ProgramClient::ReceiveMsg()
 
 void ProgramClient::SendMsg()
 {
-	tcp->Send(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendTo::ALL);
+	tcp->SendMsg(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendTo::ALL);
 
 	ui.lineEditMessage->clear();
 }

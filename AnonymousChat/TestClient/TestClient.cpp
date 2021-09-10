@@ -54,7 +54,7 @@ int main()
 		switch (tcp->WaitEvent(100))
 		{
 		case TCP::WaitEventType::MESSAGE:
-			cout << tcp->ReadMessage();
+			cout << tcp->ReadMsg();
 			break;
 
 		case TCP::WaitEventType::DISCONNECT:

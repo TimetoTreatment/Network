@@ -30,17 +30,17 @@ public:
 	TCP(std::string port, std::string targetIP = "0.0.0.0");
 	~TCP();
 
+	void AddClient();
+	void CloseClient();
+
 	WaitEventType WaitEvent(int timeoutMilliseconds = -1);
 
 	void Send(const char* message, int size, SendTo sendTo = SendTo::EVENT_SOURCE);
 	void SendMsg(std::string message, SendTo sendTo = SendTo::EVENT_SOURCE);
 
 	const char* ReadData(int size);
-	std::string ReadMessage();
+	std::string ReadMsg();
 	std::string ReadSenderID();
-
-	void AddClient();
-	void CloseClient();
 
 
 private:

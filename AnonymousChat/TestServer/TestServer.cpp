@@ -37,7 +37,7 @@ int main()
 
 		case TCP::WaitEventType::MESSAGE:
 
-			string message = tcp->ReadMessage();
+			string message = tcp->ReadMsg();
 
 			if (message.substr(0, 10) == "[SHUTDOWN]")
 				exit = true;

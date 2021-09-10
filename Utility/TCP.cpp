@@ -163,45 +163,7 @@ TCP::WaitEventType TCP::WaitEvent(int timeoutMilliseconds)
 
 void TCP::SendMsg(std::string message, SendTo sendTo)
 {
-	auto SendStream = [&](SOCKET sendTo)
-	{
-		int size = message.size() + 1;
-		int sendSize = 0;
-		int iResult;
-
-		for (; sendSize < size;)
-		{
-			if (sendSize + cacheSize <= size)
-				iResult = send(sendTo, message.c_str() + sendSize, cacheSize, 0);
-			else
-				iResult = send(sendTo, message.c_str() + sendSize, size - sendSize, 0);
-
-			if (iResult == -1)
-				std::cerr << "[ERROR] TCP::SendMsg()" << std::endl;
-
-			sendSize += iResult;
-		}
-	};
-
-	switch (sendTo)
-	{
-	case SendTo::EVENT_SOURCE:
-		SendStream(sender);
-		break;
-
-	case SendTo::ALL:
-		for (size_t i = 0; i < fdArray.size(); i++)
-			SendStream(fdArray[i].fd);
-		break;
-
-	case SendTo::OTHERS:
-		for (size_t i = 0; i < fdArray.size(); i++)
-		{
-			if (fdArray[i].fd != sender && fdArray[i].fd != mySocket)
-				SendStream(fdArray[i].fd);
-		}
-		break;
-	}
+	Send(message.c_str(), message.size() + 1, sendTo);
 }
 
 
@@ -210,7 +172,7 @@ void TCP::Send(const char* message, int size, SendTo sendTo)
 	auto SendStream = [&](SOCKET sendTo)
 	{
 		int sendSize = 0;
-		int iResult;
+		int iResult = 0;
 
 		for (; sendSize < size;)
 		{
@@ -218,6 +180,9 @@ void TCP::Send(const char* message, int size, SendTo sendTo)
 				iResult = send(sendTo, message + sendSize, cacheSize, 0);
 			else
 				iResult = send(sendTo, message + sendSize, size - sendSize, 0);
+
+			if (iResult == -1)
+				break;
 
 			sendSize += iResult;
 		}
@@ -245,7 +210,7 @@ void TCP::Send(const char* message, int size, SendTo sendTo)
 }
 
 
-std::string TCP::ReadMessage()
+std::string TCP::ReadMsg()
 {
 	std::string message;
 
@@ -253,9 +218,9 @@ std::string TCP::ReadMessage()
 	{
 		message = std::string(buffer);
 
-		memmove(buffer, buffer + message.size() + 1, message.size() + 1);
+		memmove(buffer, buffer + message.size() + 1, bufferValidDataSize - message.size() - 1);
 
-		bufferValidDataSize -= message.size() + 1;
+		bufferValidDataSize -= (int)message.size() + 1;
 	}
 	else
 	{
@@ -266,7 +231,10 @@ std::string TCP::ReadMessage()
 		bufferValidDataSize = iResult - message.size() - 1;
 
 		if (bufferValidDataSize > 0)
-			memcpy(buffer, cache + message.size() + 1, bufferValidDataSize);
+		{
+			memmove(cache, cache + message.size() + 1, bufferValidDataSize);
+			memcpy(buffer, cache, bufferValidDataSize);
+		}
 	}
 
 	return message;
