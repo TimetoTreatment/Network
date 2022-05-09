@@ -141,11 +141,15 @@
   <ItemGroup>
     <ClCompile Include="..\..\Utility\Random.cpp" />
     <ClCompile Include="..\..\Utility\TCP.cpp" />
+    <ClCompile Include="..\..\Utility\Timer.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="ProgramServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Utility\Random.h" />
     <ClInclude Include="..\..\Utility\TCP.h" />
+    <ClInclude Include="..\..\Utility\Timer.h" />
+    <ClInclude Include="ProgramServer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

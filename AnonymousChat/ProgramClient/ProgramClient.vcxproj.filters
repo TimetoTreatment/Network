@@ -38,6 +38,9 @@
     <ClCompile Include="..\..\Utility\TCP.cpp">
       <Filter>Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Utility\Timer.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="DialogNewConnection.ui">
@@ -54,6 +57,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Utility\TCP.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Utility\Timer.h">
       <Filter>Utility</Filter>
     </ClInclude>
   </ItemGroup>

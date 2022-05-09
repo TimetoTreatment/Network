@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <thread>
+#include <chrono>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 

@@ -25,17 +25,13 @@ public:
 
 private:
 
-	void NewConnection();
-
+	void Update();
+	void Connect();
+	void Initialize();
 	void ReceiveMsg();
-
-	
-	bool eventFilter(QObject* object, QEvent* event);
-
-
-
 	void SendMsg();
 
+	bool eventFilter(QObject* object, QEvent* event);
 
 	Ui::ProgramClientClass ui;
 	std::string serverAddress;

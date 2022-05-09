@@ -4,15 +4,17 @@
 ProgramClient::ProgramClient(QWidget* parent)
 {
 	ui.setupUi(this);
+	ui.lineEditMessage->installEventFilter(this);
 
-	NewConnection();
+	Connect();
+	Initialize();
 
 	QTimer* timer = new QTimer(this);
-	connect(timer, &QTimer::timeout, this, &ProgramClient::ReceiveMsg);
-	timer->start(100);
+	connect(timer, &QTimer::timeout, this, &ProgramClient::Update);
+	timer->start(10);
 }
 
-void ProgramClient::NewConnection()
+void ProgramClient::Connect()
 {
 	DialogNewConnection dialog;
 
@@ -30,13 +32,20 @@ void ProgramClient::NewConnection()
 		serverPort = "9510";
 
 	tcp = new TCP(serverPort, serverAddress);
+}
 
+void ProgramClient::Initialize()
+{
 	tcp->SendMsg("--username " + userName);
 	tcp->WaitEvent();
 
 	ui.statusBar->setText(QString::fromStdString(tcp->ReadMsg()));
+	ui.textEditChat->append(QString::fromLocal8Bit(tcp->ReadMsg().c_str()));
+}
 
-	ui.lineEditMessage->installEventFilter(this);
+void ProgramClient::Update()
+{
+	ReceiveMsg();
 }
 
 void ProgramClient::ReceiveMsg()
@@ -51,7 +60,7 @@ void ProgramClient::ReceiveMsg()
 			ui.textEditChat->setTextColor(Qt::blue);
 		else
 			ui.textEditChat->setTextColor(Qt::black);
-		
+
 		ui.textEditChat->append(QString::fromLocal8Bit(msg.c_str()));
 		ui.textEditChat->verticalScrollBar()->setValue(ui.textEditChat->verticalScrollBar()->maximum());
 
@@ -62,6 +71,13 @@ void ProgramClient::ReceiveMsg()
 
 		break;
 	}
+}
+
+void ProgramClient::SendMsg()
+{
+	tcp->SendMsg(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendTo::ALL);
+
+	ui.lineEditMessage->clear();
 }
 
 bool ProgramClient::eventFilter(QObject* object, QEvent* event)
@@ -95,14 +111,6 @@ bool ProgramClient::eventFilter(QObject* object, QEvent* event)
 	}
 	return QMainWindow::eventFilter(object, event);
 }
-
-void ProgramClient::SendMsg()
-{
-	tcp->SendMsg(ui.lineEditMessage->text().toLocal8Bit().toStdString(), TCP::SendTo::ALL);
-
-	ui.lineEditMessage->clear();
-}
-
 
 void ProgramClient::on_pushButtonSend_clicked()
 {
