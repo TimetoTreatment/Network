@@ -34,6 +34,9 @@ private:
 	map<string, string> users;
 	int anonUserCount = 0;
 
+	string messageHistory = "";
+
+
 public:
 
 	ProgramServer(string port)
@@ -61,7 +64,7 @@ public:
 				tcp->AddClient();
 				tcp->SendMsg("[SERVER] Your SocketID is #" + tcp->ReadSenderID(), TCP::SendTo::EVENT_SOURCE);
 				tcp->SendMsg("[SERVER] #" + tcp->ReadSenderID() + " is connected", TCP::SendTo::OTHERS);
-				tcp->SendMsg("±î¾Ç!!!", TCP::SendTo::EVENT_SOURCE);
+				tcp->SendMsg(messageHistory, TCP::SendTo::EVENT_SOURCE);
 				cout << "[SERVER] #" + tcp->ReadSenderID() + " is connected." << endl;
 				break;
 
@@ -106,8 +109,12 @@ public:
 				}
 				else
 				{
-					tcp->SendMsg("[" + users[tcp->ReadSenderID()] + "] : " + msg, TCP::SendTo::ALL);
+					string msgWithUsername = "[" + users[tcp->ReadSenderID()] + "] : " + msg;
+
+					tcp->SendMsg(msgWithUsername, TCP::SendTo::ALL);
 					cout << "[CLIENT] #" + tcp->ReadSenderID() + " send a message" << endl;
+
+					messageHistory += msgWithUsername + '\n';
 				}
 
 				break;
