@@ -7,7 +7,7 @@
 
 #include "../../Utility/TCP.h"
 
-
+#include <qevent.h>
 #include <string>
 
 #include <QTimer>
@@ -28,6 +28,11 @@ private:
 	void NewConnection();
 
 	void ReceiveMsg();
+
+	
+	bool eventFilter(QObject* object, QEvent* event);
+
+
 
 	void SendMsg();
 

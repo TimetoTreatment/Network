@@ -17,7 +17,7 @@ void ProgramClient::NewConnection()
 	DialogNewConnection dialog;
 
 	if (dialog.exec() != QDialog::DialogCode::Accepted)
-		return;
+		;
 
 	serverAddress = dialog.serverAddress;
 	serverPort = dialog.serverPort;
@@ -35,6 +35,8 @@ void ProgramClient::NewConnection()
 	tcp->WaitEvent();
 
 	ui.statusBar->setText(QString::fromStdString(tcp->ReadMsg()));
+
+	ui.lineEditMessage->installEventFilter(this);
 }
 
 void ProgramClient::ReceiveMsg()
@@ -42,15 +44,56 @@ void ProgramClient::ReceiveMsg()
 	switch (tcp->WaitEvent(0))
 	{
 	case TCP::WaitEventType::MESSAGE:
-		ui.textEditChat->setText(ui.textEditChat->toPlainText() + QString::fromLocal8Bit(tcp->ReadMsg().c_str()) + "\n");
+	{
+		std::string msg = tcp->ReadMsg();
+
+		if (msg.substr(0, 8) == "[SERVER]")
+			ui.textEditChat->setTextColor(Qt::blue);
+		else
+			ui.textEditChat->setTextColor(Qt::black);
+		
+		ui.textEditChat->append(QString::fromLocal8Bit(msg.c_str()));
 		ui.textEditChat->verticalScrollBar()->setValue(ui.textEditChat->verticalScrollBar()->maximum());
 
 		break;
+	}
 
 	case TCP::WaitEventType::DISCONNECT:
 
 		break;
 	}
+}
+
+bool ProgramClient::eventFilter(QObject* object, QEvent* event)
+{
+	if (object == ui.lineEditMessage) {
+		QEvent::Type type = event->type();
+		if (event->type() == QEvent::KeyPress) {
+
+			QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+
+			qDebug() << "PRESS : " << keyEvent->key() << '\n';
+
+
+			if (keyEvent->key() == Qt::Key::Key_Space) {
+				ui.lineEditMessage->setText(ui.lineEditMessage->text() + ' ');
+				return true;
+			}
+		}
+
+		if (event->type() == QEvent::KeyRelease)
+		{
+			QKeyEvent* keyEvent = (QKeyEvent*)event;
+
+			qDebug() << "RELEASE : " << keyEvent->key() << '\n';
+
+			if (keyEvent->key() == Qt::Key::Key_Space) {
+				return true;
+			}
+
+		}
+	}
+	return QMainWindow::eventFilter(object, event);
 }
 
 void ProgramClient::SendMsg()
