@@ -11,7 +11,7 @@ ProgramClient::ProgramClient(QWidget* parent)
 
 	QTimer* timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, &ProgramClient::Update);
-	timer->start(10);
+	timer->start(1);
 }
 
 void ProgramClient::Connect()
@@ -40,7 +40,8 @@ void ProgramClient::Initialize()
 	tcp->WaitEvent();
 
 	ui.statusBar->setText(QString::fromStdString(tcp->ReadMsg()));
-	ui.textEditChat->append(QString::fromLocal8Bit(tcp->ReadMsg().c_str()));
+	ui.textEditChat->setText(QString::fromLocal8Bit((tcp->ReadMsg() + "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n").c_str()));
+
 }
 
 void ProgramClient::Update()
@@ -82,14 +83,11 @@ void ProgramClient::SendMsg()
 
 bool ProgramClient::eventFilter(QObject* object, QEvent* event)
 {
-	if (object == ui.lineEditMessage) {
-		QEvent::Type type = event->type();
+	if (object == ui.lineEditMessage)
+	{
 		if (event->type() == QEvent::KeyPress) {
 
-			QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-
-			qDebug() << "PRESS : " << keyEvent->key() << '\n';
-
+			QKeyEvent* keyEvent = (QKeyEvent*)event;
 
 			if (keyEvent->key() == Qt::Key::Key_Space) {
 				ui.lineEditMessage->setText(ui.lineEditMessage->text() + ' ');
@@ -101,14 +99,11 @@ bool ProgramClient::eventFilter(QObject* object, QEvent* event)
 		{
 			QKeyEvent* keyEvent = (QKeyEvent*)event;
 
-			qDebug() << "RELEASE : " << keyEvent->key() << '\n';
-
-			if (keyEvent->key() == Qt::Key::Key_Space) {
+			if (keyEvent->key() == Qt::Key::Key_Space)
 				return true;
-			}
-
 		}
 	}
+
 	return QMainWindow::eventFilter(object, event);
 }
 

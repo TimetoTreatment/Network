@@ -143,13 +143,17 @@
     <ClCompile Include="..\..\Utility\TCP.cpp" />
     <ClCompile Include="..\..\Utility\Timer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Operation.cpp" />
     <ClCompile Include="ProgramServer.cpp" />
+    <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Utility\Random.h" />
     <ClInclude Include="..\..\Utility\TCP.h" />
     <ClInclude Include="..\..\Utility\Timer.h" />
+    <ClInclude Include="Operation.h" />
     <ClInclude Include="ProgramServer.h" />
+    <ClInclude Include="User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
